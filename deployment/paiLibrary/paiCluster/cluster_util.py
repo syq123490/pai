@@ -99,7 +99,9 @@ def generate_configuration(quick_start_config_file, configuration_directory, for
     #
     # kubernetes info
     api_servers_url = "http://{0}:{1}".format(master_node["hostip"], 8080)
+    # TODO we some k8s template still using the 'dashboard_host'
     dashboard_host = master_node["hostip"]
+    dashboard_url = "http://{0}:{1}".format(master_node["hostip"], 9090)
 
     #
     # Generate configuration files.
@@ -127,6 +129,7 @@ def generate_configuration(quick_start_config_file, configuration_directory, for
                             "load-balance-ip": master_node["hostip"],
                             "service-cluster-ip-range": service_cluster_ip_range,
                             "api-servers-url": api_servers_url,
-                            "dashboard-host": dashboard_host
+                            "dashboard-host": dashboard_host,
+                            "dashboard-url": dashboard_url
                         }
                     }))
