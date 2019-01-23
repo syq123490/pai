@@ -468,19 +468,24 @@ class Configuration(SubCmd):
         external_conf_update.update_latest_external_configuration()
 
 
-def handle_layout(args):
-    # TODO now no options implemented
-    print(args)
+def generate_layout(args):
+    layoutFile = os.path.join(args.output, "layout.yaml")
+    print("Generating:" + layoutFile)
+    if(os.path.exists(layoutFile)):
+        if(args.force):
+            print("Will overwrite existing file:", layoutFile)
+        else:
+            print("File existing, please passing '-f' to overwrite:", layoutFile)
     from deployment import layout
-    layout.generate_layout(args.output + "/layout.yaml")
+    layout.generate_layout(layoutFile)
 
 
 def check(args):
     import os
     # TODO now no options implemented
     print(args)
-    layoutFile = os.path.join(args.configPath, 'layout.yaml')
-    serviceConfigFile = os.path.join(args.configPath, 'service-configuration.yaml')
+    layoutFile = os.path.join(args.configPath, "layout.yaml")
+    serviceConfigFile = os.path.join(args.configPath, "service-configuration.yaml")
     print("layout.yaml existing:", os.path.exists(layoutFile))
     print("service-configuration.yaml existing:", os.path.exists(serviceConfigFile))
     print("kubernetes ready:", True)
@@ -493,15 +498,15 @@ def main(args):
     sub_parser = parser.add_subparsers(help="paictl operations")
 
     # create the parser for "layout" command
-    parser_layout = sub_parser.add_parser('layout', help='layout tools')
-    parser_layout.add_argument("--dry", dest="dry", type=bool, default=False, help="dry run. Generate the layout.yaml")
-    parser_layout.add_argument("--output", dest="output", default='/cluster-configuration', help="Output directory of layout.yaml")
-    parser_layout.set_defaults(handler=handle_layout)
+    parser_layout = sub_parser.add_parser("layout", help="layout tools")
+    parser_layout.add_argument("-o", "--output", dest="output", default="/cluster-configuration", help="Output directory of layout.yaml")
+    parser_layout.add_argument("-f", "--force", dest="force", action="store_true", default=False, help="Force to overwrite")
+    parser_layout.set_defaults(handler=generate_layout)
 
     # create the parser for "check" command
-    parser_check = sub_parser.add_parser('check', help='check PAI status')
+    parser_check = sub_parser.add_parser("check", help="check PAI status")
     parser_check.add_argument("--pre", dest="pre", type=bool, default=False, help="Precheck. Check the prerequisites, and valid the configuration.")
-    parser_check.add_argument("--config-path", dest="configPath", default='/cluster-configuration', help="Configuration path.")
+    parser_check.add_argument("--config-path", dest="configPath", default="/cluster-configuration", help="Configuration path.")
     parser_check.set_defaults(handler=check)
 
     for name, subcmd in {
