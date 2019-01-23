@@ -56,12 +56,28 @@ There are two situations in which a user's AKS cluster can be ***[built from scr
 
 ### Step 1. Prepare Deployment Environment <a name="c-step-1"></a>
 
-- [A guide to prepare deployment env](./prepare_dev_env.md)
+- Step 1.1. [A guide to prepare deployment env](./prepare_dev_env.md)
 
+- Step 1.2. Prepare kubectl for AKS env 
 
-***Precautions***:
+- [install Azure CLI doc](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest).
+ 
+- [config kubectl](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)
 
-- [For AKS env prepare kubectl](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster). Note: kubectl of AKS depends on Azure CLI, user could refer [install Azure CLI doc](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest).
+To manage a Kubernetes cluster, you use kubectl, the Kubernetes command-line client. If you use Azure Cloud Shell, kubectl is already installed. To install kubectl locally, use the az aks install-cli command:
+```
+az aks install-cli
+```
+
+To configure kubectl to connect to your Kubernetes cluster, use the az aks get-credentials command. This command downloads credentials and configures the Kubernetes CLI to use them. User could get "myResourceGroup", "myAKSCluster" from your Azure portal or Azure CLI.
+
+```
+az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
+```
+
+output logs:
+
+Merged "myAKSCluster" as current context in /root/.kube/config
 
 ***
 
