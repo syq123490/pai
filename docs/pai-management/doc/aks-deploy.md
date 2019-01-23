@@ -19,34 +19,36 @@
 
 ## OpenPAI deploy on AKS
 
-- [Prepare an AKS cluster best practice](#c-step-1)
-- [OpenPAI Deployment on AKS Steps](#c-step-02)
+The purpose of this document is to enable users to deploy OpenPAI on a cluster of Azure AKS.
 
-### Prepare an AKS cluster for OpenPAI best practice<a name="a-step-1"></a>
+## Table of contents
+- [1. Prepare or adapt an AKS cluster for OpenPAI precautions](#c-step-1)
+- [2. OpenPAI Deployment on AKS Steps](#c-step-02)
 
-Users can refer to the AKS official documentation to [deploy an AKS cluster through the Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#create-aks-cluster).
+### 1. Prepare or adapt an AKS cluster for OpenPAI precautions<a name="a-step-1"></a>
+
+
+
+There are two situations in which a user's AKS cluster can be ***[built from scratch]((https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#create-aks-cluster))*** and ***existing clusters***. For clusters in different situations, we summarized some ***Precautions*** (affect the service function being deployed) and ***Recommended considerations*** before and during deployment.
 
 ***Precautions***:
+- For api-server RBAC: 
+  - When deploy AKS from scratch: Disable api-server RBAC when create cluster by param ["--disable-rbac"](https://docs.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest#az-aks-create). 
+  -  When use existing enabled RBAC AKS cluster: OpenPAI service pod will be mounted default service account. User could [create role binding refer aks doc](https://docs.microsoft.com/en-us/azure/aks/kubernetes-dashboard#for-rbac-enabled-clusters) to"default:default" [service account](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#service-account-permissions) and "kube-system:k8s-dashboard" service account. As OpenPAI service restserver / prometheus etc & k8s dashboard will access api-server.
 
-- Use the ***az aks create*** command to create an AKS cluster. Configure the node os disk through the configuration item ***--node-osdisk-size to*** have large disk space. 
-- Disable api-server RBAC when create cluster by param ["--disable-rbac"](https://docs.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest#az-aks-create). OpenPAI will enable aks rbac related feature in the next round.
-- Admin could open the OpenPAI homepage to the external network users through [Azure load balancer and service](https://docs.microsoft.com/en-us/azure/aks/static-ip). Redirect public ip to port 80 (default is OpenPAI entry page default 80 port)
-
-For [this step](https://docs.microsoft.com/en-us/azure/aks/static-ip#create-a-service-using-the-static-ip-address): your k8s service load balancer config to select app pylon.
-
-```
-spec:
-  selector:
-    app: pylon
-```
+***Recommended considerations***:
+- For node disk: 
+  - When deploy AKS from scratch: Use the ***az aks create*** command to create an AKS cluster. Configure the node os disk through the configuration item ***--node-osdisk-size to*** have large disk space. It is better > 500GB. 
+  - When user existing AKS cluster: If the disk is small, the user can mount a larger disk through the AKS VM and change the disk path "data-path: "/datastorage" item in service-configuration.yaml used by the PAI service to a larger disk in step-3 below.
 
 
 
-### OpenPAI Deployment on AKS Steps <a name="a-step-2"></a>
+### 2. OpenPAI Deployment on AKS Steps <a name="a-step-2"></a>
 - [Step 1. Prepare Deployment Environment](#c-step-1)
 - [Step 2. Prepare configuration](#c-step-2)
-- [Step 3. Update cluster configuration into kubernetes](#c-step-4)
-- [Step 4. Start all OpenPAI services](#c-step-5)
+- [Step 3. Update cluster configuration into kubernetes](#c-step-3)
+- [Step 4. Start all OpenPAI services](#c-step-4)
+- [Other considerations and configurations](#c-step-5)
 - [appendix. Validate deployment](#appendix)
 
 ***
@@ -54,53 +56,53 @@ spec:
 
 ### Step 1. Prepare Deployment Environment <a name="c-step-1"></a>
 
-Prepare deployment related dependency.
+- [A guide to prepare deployment env](./prepare_dev_env.md)
 
-- [Option A. Start Dev-box contianer as the environemnt.](./how-to-setup-dev-box.md) 
-- [Option B. Install necessary dependency software on your host.](./how-to-install-depdencey.md)
-
-Note 1: If you wanna manage the cluster in a machine belonging to OpenPAI, please choose option B. Otherwise, option A is highly recommended.
 
 ***Precautions***:
 
-- [Prepare kubectl over your deployment environment](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster). Note: kubectl of AKS depends on Azure CLI, user could refer [install Azure CLI doc](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest).
+- [For AKS env prepare kubectl](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster). Note: kubectl of AKS depends on Azure CLI, user could refer [install Azure CLI doc](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt?view=azure-cli-latest).
 
 ***
 
 ### Step 2. Prepare Configuraiton <a name="c-step-2"></a>
 
-- Step 2.1 generate layout.yaml
-
-```
-python paictl.py layout
-```
-
-output folder and layout.yaml file are at /cluster-configuration.
-
-- Step 2.2 customize configuration 
-
-copy or prepare a [service-configuration.yaml](https://github.com/Microsoft/pai/blob/master/deployment/quick-start/services-configuration.yaml.template) under /cluster-configuration. Please fill in the docker docker-registry content. 
-
-```
-cluster:
-  docker-registry:
-```
-
-
-
-### Step 4. Update cluster configuration into kubernetes <a name="c-step-4"></a>
-
-- [A Guide to update configuration](./push-cfg-and-set-id.md)
+- [A guide to generate layout](./generate_layout.md)
 
 ***
 
-### Step 5. Start all OpenPAI services <a name="c-step-5"></a>
+### Step 3. Update cluster configuration into kubernetes <a name="c-step-3"></a>
 
-- [A Guide to start OpenPAI services](./how-to-start-pai-serv.md)
+- [A guide to update configuration](./push-cfg-and-set-id.md)
+
+***
+
+### Step 4. Start all OpenPAI services <a name="c-step-4"></a>
+
+- [A guide to start OpenPAI services](./how-to-start-pai-serv.md)
 
 
 ***
+
+### Other considerations and configurations <a name="c-step-5"></a>
+
+- Expose OpenPAI mainpage 
+
+Admin could open the OpenPAI homepage to the external network users through [Azure load balancer and service](https://docs.microsoft.com/en-us/azure/aks/static-ip). Redirect public ip to port 80 (default is OpenPAI entry page default 80 port)
+
+For [this step](https://docs.microsoft.com/en-us/azure/aks/static-ip#create-a-service-using-the-static-ip-address): update k8s service load balancer yaml config to use app: pylon as selector.
+
+```
+spec:
+  selector:
+    app: pylon
+```
+
+- OpenPAI master use GPU node
+
+Normally we recommend use the cpu node to deploy the Open master. But AKS [Multi node pooling functionality is not yet supported](https://feedback.azure.com/forums/914020-azure-kubernetes-service-aks/suggestions/34917127-support-multiple-node-pool). The default OpenPAI on AKS will use the GPU node as the master. The master node will not schedule jobs, and the master node GPU will not be used.
+
 
 ### appendix. Validate deployment <a name="appendix"></a>
 
-- [A Guide to validate deployment](./validate-deployment.md)
+- [A guide to validate deployment](./validate-deployment.md)
